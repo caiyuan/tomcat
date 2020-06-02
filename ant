@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# 安装 Ant
+
+if [ `command -v ant` ]; then
+  ant -version
+else
+  ANT_BASEDIR=~/.ant
+  ANT_COMMAND=/usr/local/bin/ant
+
+  rm -rf ${ANT_BASEDIR}
+  rm -rf ${ANT_COMMAND}
+
+  mkdir -p ${ANT_BASEDIR} && cd ${ANT_BASEDIR}
+
+  wget https://mirrors.bfsu.edu.cn/apache/ant/binaries/apache-ant-1.10.8-bin.zip && unzip apache-ant-1.10.8-bin.zip
+  ln -s ${ANT_BASEDIR}/apache-ant-1.10.8/bin/ant ${ANT_COMMAND} && ant -version
+
+  cd -
+fi
+
+# 执行 Ant
+
+ant "$@"
