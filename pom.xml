@@ -72,6 +72,13 @@
             <artifactId>easymock</artifactId>
             <version>3.2</version>
         </dependency>
+
+        <!-- 定制 Tomcat 的日志输出方式 -->
+        <dependency>
+            <groupId>me.caiyuan.tomcat</groupId>
+            <artifactId>adaptor-log4j2</artifactId>
+            <version>8.5.55</version>
+        </dependency>
     </dependencies>
 
 </project>
