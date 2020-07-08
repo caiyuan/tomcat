@@ -1,79 +1,93 @@
-## Welcome to Apache Tomcat!
+#### 编译 tomcat
 
-### What Is It?
+```shell script
+./ant
+```
 
-The Apache Tomcat® software is an open source implementation of the Java
-Servlet, JavaServer Pages, Java Expression Language and Java WebSocket
-technologies. The Java Servlet, JavaServer Pages, Java Expression Language and
-Java WebSocket specifications are developed under the
-[Java Community Process](https://jcp.org/en/introduction/overview).
+#### 调试 tomcat
 
-The Apache Tomcat software is developed in an open and participatory
-environment and released under the
-[Apache License version 2](https://www.apache.org/licenses/). The Apache Tomcat
-project is intended to be a collaboration of the best-of-breed developers from
-around the world. We invite you to participate in this open development
-project. To learn more about getting involved,
-[click here](https://tomcat.apache.org/getinvolved.html) or keep reading.
+```text
+Main class: org.apache.catalina.startup.Bootstrap
 
-Apache Tomcat software powers numerous large-scale, mission-critical web
-applications across a diverse range of industries and organizations. Some of
-these users and their stories are listed on the
-[PoweredBy wiki page](https://wiki.apache.org/tomcat/PoweredBy).
+VM options: -Dcatalina.home=output/build
+```
 
-Apache Tomcat, Tomcat, Apache, the Apache feather, and the Apache Tomcat
-project logo are trademarks of the Apache Software Foundation.
+#### 处理 日志乱码
 
-### Get It
+```text
+VM options: -Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8
+```
 
-For every major Tomcat version there is one download page containing
-links to the latest binary and source code downloads, but also
-links for browsing the download directories and archives:
-- [Tomcat 9](https://tomcat.apache.org/download-90.cgi)
-- [Tomcat 8](https://tomcat.apache.org/download-80.cgi)
-- [Tomcat 7](https://tomcat.apache.org/download-70.cgi)
+#### 简配 `server.xml`
 
-To facilitate choosing the right major Tomcat version one, we have provided a
-[version overview page](https://tomcat.apache.org/whichversion.html).
+- 样例(1)
 
-### Documentation
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="8005" shutdown="SHUTDOWN">
 
-The documentation available as of the date of this release is
-included in the docs webapp which ships with tomcat. You can access that webapp
-by starting tomcat and visiting http://localhost:8080/docs/ in your browser.
-The most up-to-date documentation for each version can be found at:
-- [Tomcat 9](https://tomcat.apache.org/tomcat-9.0-doc/)
-- [Tomcat 8](https://tomcat.apache.org/tomcat-8.5-doc/)
-- [Tomcat 7](https://tomcat.apache.org/tomcat-7.0-doc/)
+  <Service name="Catalina-1">
+    <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" />
+    <Engine name="Catalina-1" defaultHost="localhost">
+      <Host name="localhost"  appBase="webapps" unpackWARs="true" autoDeploy="true">
+        <Context docBase="docs" path=""/>
+      </Host>
+    </Engine>
+  </Service>
 
-### Installation
+  <Service name="Catalina-2">
+    <Connector port="8000" protocol="org.apache.coyote.http11.Http11Nio2Protocol" connectionTimeout="20000" redirectPort="8443" />
+    <Engine name="Catalina-2" defaultHost="localhost">
+      <Host name="localhost"  appBase="webapps" unpackWARs="true" autoDeploy="true">
+        <Context docBase="examples" path=""/>
+      </Host>
+    </Engine>
+  </Service>
 
-Please see [RUNNING.txt](RUNNING.txt) for more info.
+</Server>
+```
 
-### Licensing
+- 样例(2)
 
-Please see [LICENSE](LICENSE) for more info.
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="8005" shutdown="SHUTDOWN">
 
-### Support and Mailing List Information
+    <Service name="Catalina">
+        <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443"/>
+        <Connector port="8000" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443"/>
 
-* Free community support is available through the
-[tomcat-users](https://tomcat.apache.org/lists.html#tomcat-users) email list and
-a dedicated [IRC channel](https://tomcat.apache.org/irc.html) (#tomcat on
-Freenode).
+        <Engine name="Catalina" defaultHost="localhost">
+            <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="true">
+                <Context docBase="docs" path="/docs"/>
+                <Context docBase="ROOT" path=""/>
 
-* If you want freely available support for running Apache Tomcat, please see the
-resources page [here](https://tomcat.apache.org/findhelp.html).
+                <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
+                       prefix="localhost_access_log" suffix=".txt" pattern="%h %l %u %t &quot;%r&quot; %s %b"/>
+            </Host>
 
-* If you want to be informed about new code releases, bug fixes,
-security fixes, general news and information about Apache Tomcat, please
-subscribe to the
-[tomcat-announce](https://tomcat.apache.org/lists.html#tomcat-announce) email
-list.
+            <Host name="127.0.0.1" appBase="webapps" unpackWARs="true" autoDeploy="true">
+                <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
+                       prefix="127.0.0.1_access_log" suffix=".txt" pattern="%h %l %u %t &quot;%r&quot; %s %b"/>
+            </Host>
+        </Engine>
+    </Service>
 
-* If you have a concrete bug report for Apache Tomcat, please see the
-instructions for reporting a bug
-[here](https://tomcat.apache.org/bugreport.html).
+</Server>
+```
 
-### Contributing
+#### 结构
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for more info.
+![](docs/Server-1.png)
+
+#### 层次
+
+![](docs/Server-2.png)
+
+#### 连接
+
+![](docs/Server-3.png)
+
+#### 装载
+
+![](docs/Server-4.png)
