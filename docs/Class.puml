@@ -1,0 +1,79 @@
+@startuml
+
+interface Lifecycle {
+  +init()
+  +start()
+  +stop()
+  +destroy()
+}
+interface Server
+interface Service
+class Connector
+interface Container
+interface Engine
+interface Host
+interface Context
+interface Wrapper
+
+Lifecycle <|-- Server
+Lifecycle <|-- Service
+Lifecycle <|-- Connector
+Lifecycle <|-- Container
+Container <|-- Engine
+Container <|-- Host
+Container <|-- Context
+Container <|-- Wrapper
+
+class StandardServer
+class StandardService
+class StandardEngine
+class StandardHost
+class StandardContext
+class StandardWrapper
+
+Server <|-- StandardServer
+Service <|-- StandardService
+Engine <|-- StandardEngine
+Host <|-- StandardHost
+Context <|-- StandardContext
+Wrapper <|-- StandardWrapper
+
+abstract class LifecycleBase {
+  #initInternal()
+  #startInternal()
+  #stopInternal()
+  #destroyInternal()
+}
+abstract class ContainerBase
+
+LifecycleBase <|-- ContainerBase
+
+interface LifecycleListener
+class EngineConfig
+class HostConfig
+class ContextConfig
+
+LifecycleListener <|-- EngineConfig
+LifecycleListener <|-- HostConfig
+LifecycleListener <|-- ContextConfig
+
+interface Pipeline
+interface Contained
+interface Valve
+class StandardPipeline
+abstract class ValveBase
+class StandardEngineValve
+class StandardHostValve
+class StandardContextValve
+class StandardWrapperValve
+
+Pipeline <|-- StandardPipeline
+Contained <|-- StandardPipeline
+Contained <|-- ValveBase
+Valve <|-- ValveBase
+ValveBase <|-- StandardEngineValve
+ValveBase <|-- StandardHostValve
+ValveBase <|-- StandardContextValve
+ValveBase <|-- StandardWrapperValve
+
+@enduml

@@ -1,0 +1,107 @@
+@startuml
+
+group 解析
+    Bootstrap -> Catalina: bootstrap.init()
+    Catalina -> StandardServer: <create>
+    Catalina -> StandardService: <create>
+    Catalina -> StandardEngine: <create>
+    Catalina -> StandardHost: <create>
+    Catalina -> StandardContext: <create>
+    StandardWrapper -[#FFF]> StandardWrapper
+    Catalina -> Connector: <create>
+    Connector -> ProtocolHandler: <create>
+    ProtocolHandler -> AbstractEndpoint: <create>
+end
+
+group 加载
+    Bootstrap -> Catalina: daemon.load(args)
+    Catalina -> StandardServer: load()
+    StandardServer -> StandardService: init()
+    StandardService -> StandardEngine: init()
+    StandardService -> Connector: init()
+    Connector -> ProtocolHandler: init()
+    ProtocolHandler -> AbstractEndpoint: init()
+end
+
+group 启动
+    Bootstrap -> Catalina: daemon.start()
+    Catalina -> StandardServer: start()
+    StandardServer -> StandardService: start()
+    StandardService -> StandardEngine: start()
+    group Container
+        StandardEngine -> StandardHost: start()
+        StandardHost --> StandardHost: init()
+        StandardHost -> StandardContext: start()
+        StandardContext --> StandardContext: init()
+        StandardContext -> StandardWrapper: start()
+        StandardWrapper --> StandardWrapper: init()
+        StandardWrapper --> StandardContext
+        StandardContext --> StandardHost
+        StandardHost --> StandardEngine
+    end
+    StandardService -> Connector: start()
+    Connector -> ProtocolHandler: start()
+    ProtocolHandler -> AbstractEndpoint: start()
+end
+
+note right
+  class **ContainerBase** {
+
+      void initInternal() {
+          startStopExecutor = new ThreadPoolExecutor(...);
+      }
+
+      void startInternal() {
+          for (Container child : children) {
+              results.add(startStopExecutor.submit(new StartChild(child)));
+          }
+
+          for (Future<Void> result : results) {
+              result.get();
+          }
+      }
+  }
+end note
+
+group 部署
+    participant "**[ContainerBackgroundProcessor[StandardEngine[]]]**" as ContainerBackgroundProcessor
+    ContainerBackgroundProcessor -[#FFF]> ContainerBackgroundProcessor
+    StandardHost -> StandardHost: startInternal()
+    StandardHost -> StandardHost: setState(LifecycleState.STARTING)
+    StandardHost -> StandardHost: fireLifecycleEvent(LifecycleState.STARTING,null)
+    StandardHost -> HostConfig: listener.lifecycleEvent(event)
+    group loop
+        StandardEngine -> ContainerBackgroundProcessor: threadStart()
+        ContainerBackgroundProcessor -> StandardHost: processChildren(child)
+        StandardHost -> StandardHost: backgroundProcess()
+        StandardHost -> StandardHost: fireLifecycleEvent(Lifecycle.PERIODIC_EVENT, null)
+        StandardHost -> HostConfig: listener.lifecycleEvent(event)
+    end
+    HostConfig -> HostConfig: deployApps()
+    HostConfig -> StandardHost: host.addChild(context)
+    StandardHost -> StandardContext: child.start()
+    StandardContext -> StandardContext: startInternal()
+    StandardContext -> StandardContext: fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null)
+    StandardContext -> ContextConfig: listener.lifecycleEvent(event)
+    ContextConfig -> ContextConfig: configureStart()
+end
+
+group 请求
+    group NioEndpoint
+        participant "**Socket acceptor thread**" as Acceptor
+        participant "**Socket poller thread**" as Poller
+        participant "**Worker threads pool**" as Worker
+
+        AbstractEndpoint --> Acceptor
+        Acceptor --> Poller
+        Poller --> Worker
+    end
+    Worker -> CoyoteAdapter: service(request,response)
+    CoyoteAdapter -> ApplicationFilterChain: doFilter(request,response)
+    group Java EE API
+        ApplicationFilterChain -> Filter: filter.doFilter(request,response,chain)
+        ApplicationFilterChain -> Servlet: servlet.service(request,response)
+    end
+end
+
+@enduml
