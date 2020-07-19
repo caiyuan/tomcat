@@ -97,9 +97,15 @@ group 请求
         Poller --> Worker
     end
     Worker -> CoyoteAdapter: service(request,response)
-    CoyoteAdapter -> ApplicationFilterChain: doFilter(request,response)
+    CoyoteAdapter -> Mapper: <w:#FF33FF> connector.service.mapper.map() </w>
+
+    participant "**Pipeline#Valve**" as Valve
+    CoyoteAdapter -> Valve: <w:#FF33FF> connector.service.container.pipeline.first.invoke() </w>
+    hnote over Valve: ** invoke ... **
+
+    Valve -> ApplicationFilterChain: doFilter(request,response)
     group Java EE API
-        ApplicationFilterChain -> Filter: filter.doFilter(request,response,chain)
+        ApplicationFilterChain -> Filter: filter.doFilter(request,response,this)
         ApplicationFilterChain -> Servlet: servlet.service(request,response)
     end
 end
